@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Rachunki — Korepetycje</title>
+<style>
+  :root{
+    --ink:#20293B;
+    --ink-soft:#4B5468;
+    --paper:#EEEBE2;
+    --paper-2:#F8F6F0;
+    --line:#CFC9B8;
+    --stamp:#7C3232;
+    --brass:#9C7A34;
+    --ok:#3E6B4F;
+    --danger:#8B3232;
+    --shadow: 0 1px 2px rgba(32,41,59,.08), 0 4px 14px rgba(32,41,59,.06);
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --mono: 'Courier New', Consolas, ui-monospace, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #app{max-width:820px;margin:0 auto;padding:0 0 90px;}
+
+  /* ---------- header ---------- */
+  header.top{
+    padding:22px 18px 14px;
+    border-bottom:1px solid var(--line);
+    background:var(--paper);
+    position:sticky;top:0;z-index:20;
+  }
+  header.top h1{
+    font-family:var(--serif);
+    font-size:22px;
+    margin:0 0 2px;
+    letter-spacing:.2px;
+  }
+  header.top p{margin:0;font-size:12.5px;color:var(--ink-soft);}
+
+  nav.tabs{
+    display:flex;gap:6px;
+    padding:12px 18px 0;
+    background:var(--paper);
+    position:sticky;top:64px;z-index:19;
+  }
+  nav.tabs button{
+    flex:1;
+    padding:10px 8px;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--ink-soft);
+    font-family:var(--sans);
+    font-size:13px;
+    font-weight:600;
+    border-radius:8px 8px 0 0;
+    cursor:pointer;
+    border-bottom:none;
+    position:relative;
+    top:1px;
+  }
+  nav.tabs button.active{
+    background:var(--paper);
+    color:var(--ink);
+    border-color:var(--ink);
+    border-bottom:1px solid var(--paper);
+  }
+
+  main{padding:16px 18px 0;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- form ---------- */
+  .card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:14px;
+    box-shadow:var(--shadow);
+  }
+  .card h2{
+    font-family:var(--serif);
+    font-size:15px;
+    margin:0 0 12px;
+    color:var(--ink);
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .n{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--brass);
+    border:1px solid var(--brass);
+    border-radius:3px;
+    padding:1px 6px;
+  }
+  label{
+    display:block;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:10px 0 4px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  label:first-child{margin-top:0;}
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%;
+    font-family:var(--sans);
+    font-size:15px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    background:#fff;
+    color:var(--ink);
+  }
+  textarea{resize:vertical;min-height:52px;font-family:var(--sans);}
+  .row{display:flex;gap:10px;}
+  .row > div{flex:1;}
+  .check{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--ink-soft);
+    margin-top:12px;font-weight:500;
+    text-transform:none;letter-spacing:0;
+  }
+  .check input{width:auto;}
+
+  /* line items */
+  .item{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:8px;
+    background:#fff;
+    position:relative;
+  }
+  .item .row{margin-top:8px;}
+  .item .remove{
+    position:absolute;top:8px;right:8px;
+    background:none;border:none;color:var(--danger);
+    font-size:12px;cursor:pointer;font-weight:700;
+  }
+  .add-item{
+    width:100%;
+    padding:10px;
+    border:1px dashed var(--brass);
+    background:none;
+    color:var(--brass);
+    border-radius:8px;
+    font-size:13px;font-weight:700;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .item-value{
+    text-align:right;font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin-top:6px;
+  }
+
+  /* ---------- preview / receipt (paragon / thermal-ticket style) ---------- */
+  .preview-wrap{padding:4px 18px 24px;display:flex;justify-content:center;}
+  .receipt{
+    width:320px;
+    max-width:100%;
+    background:#fff;
+    color:#151515;
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.55;
+    padding:20px 16px 18px;
+    position:relative;
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+  }
+  .receipt::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:8px;
+    background-image: radial-gradient(circle, var(--paper) 2.6px, transparent 2.7px);
+    background-size:14px 8px;
+    background-position:0 -4px;
+    background-repeat:repeat-x;
+  }
+  .r-shop{text-align:center;margin-bottom:8px;}
+  .r-shop .name{font-weight:700;font-size:13.5px;text-transform:uppercase;letter-spacing:.02em;}
+  .r-shop .line{font-size:11.5px;white-space:pre-line;}
+  .r-shop .nip{font-size:11px;margin-top:2px;}
+  .r-tag{
+    text-align:center;font-weight:700;font-size:12px;
+    margin:10px 0;letter-spacing:.02em;
+  }
+  .r-dash{border-top:1px dashed #555;margin:9px 0;}
+  .r-dash.solid{border-top-style:solid;border-color:#000;}
+  .r-meta-row{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:2px;}
+  .r-cols{margin-bottom:2px;}
+  .r-col{margin-bottom:8px;}
+  .r-col h3{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin:0 0 2px;}
+  .r-col p{margin:0;font-size:11.5px;line-height:1.45;white-space:pre-line;}
+  .r-items{margin:4px 0;}
+  .r-item{margin-bottom:7px;}
+  .r-item .desc{font-size:12px;}
+  .r-item .qtyline{display:flex;justify-content:space-between;font-size:12px;}
+  .r-sum-row{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0;}
+  .r-sum-row .label{font-weight:700;font-size:15px;letter-spacing:.03em;}
+  .r-sum-row .amount{font-weight:700;font-size:17px;}
+  .r-sum-row.total .label, .r-sum-row.total .amount{font-size:19px;}
+  .r-pay-title{text-align:center;font-size:11px;font-weight:700;letter-spacing:.03em;margin:8px 0 4px;}
+  .r-pay-row{display:flex;justify-content:space-between;font-size:12px;}
+  .r-clause{font-size:9.5px;color:#444;margin:10px 0 8px;line-height:1.5;text-align:left;}
+  .r-foot{text-align:center;font-size:11px;margin-top:4px;}
+  .r-foot .num{font-weight:700;}
+  .r-issuer{font-size:11px;margin-top:10px;text-align:center;}
+
+  /* ---------- buttons / actions ---------- */
+  .actions{
+    position:sticky;bottom:0;left:0;right:0;
+    background:linear-gradient(to top, var(--paper) 60%, transparent);
+    padding:18px 18px 20px;
+    display:flex;gap:10px;
+  }
+  button.primary, button.secondary{
+    flex:1;
+    padding:14px;
+    border-radius:9px;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  button.primary{background:var(--ink);color:var(--paper-2);}
+  button.secondary{background:none;border-color:var(--ink);color:var(--ink);}
+
+  /* ---------- history ---------- */
+  .hist-item{
+    background:var(--paper-2);border:1px solid var(--line);border-radius:9px;
+    padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow);
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+  }
+  .hist-item .meta{font-size:12px;color:var(--ink-soft);}
+  .hist-item .num{font-family:var(--mono);font-size:13px;color:var(--ink);font-weight:700;}
+  .hist-item .amt{font-family:var(--mono);font-size:15px;font-weight:700;}
+  .hist-actions{display:flex;gap:8px;}
+  .hist-actions button{
+    border:1px solid var(--line);background:#fff;border-radius:6px;
+    padding:6px 9px;font-size:12px;cursor:pointer;color:var(--ink-soft);
+  }
+  .hist-actions button.del{color:var(--danger);border-color:var(--danger);}
+  .empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:40px 20px;}
+
+  .toast{
+    position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:var(--paper-2);padding:10px 18px;border-radius:8px;
+    font-size:13px;box-shadow:var(--shadow);z-index:50;opacity:0;transition:opacity .25s;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+
+  /* ---------- print ---------- */
+  @media print{
+    header.top, nav.tabs, main .card, .actions, #history-view, .no-print{display:none !important;}
+    body{background:#fff;}
+    #app{max-width:none;padding:0;margin:0;}
+    .preview-wrap{padding:0;}
+    .receipt{box-shadow:none;border:none;padding:16px 6px;}
+    @page{margin:14mm;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="top">
+    <h1>Rachunki — Korepetycje</h1>
+    <p>Prosty dowód sprzedaży dla działalności nierejestrowanej</p>
+  </header>
+
+  <nav class="tabs">
+    <button id="tab-new" class="active" onclick="switchTab('new')">Nowy rachunek</button>
+    <button id="tab-hist" onclick="switchTab('hist')">Historia</button>
+  </nav>
+
+  <div id="new-view" class="view active">
+    <main>
+
+      <div class="card">
+        <h2><span class="n">1</span> Sprzedawca (Ty)</h2>
+        <label>Imię i nazwisko</label>
+        <input type="text" id="s-name" placeholder="np. Anna Kowalska">
+        <label>Adres</label>
+        <textarea id="s-address" placeholder="ul. Przykładowa 1&#10;50-000 Wrocław"></textarea>
+        <div class="row">
+          <div>
+            <label>PESEL (opcjonalnie)</label>
+            <input type="text" id="s-pesel" placeholder="opcjonalnie">
+          </div>
+          <div>
+            <label>Telefon / e-mail</label>
+            <input type="text" id="s-contact" placeholder="opcjonalnie">
+          </div>
+        </div>
+        <div class="check">
+          <input type="checkbox" id="s-remember" checked>
+          <label style="margin:0;text-transform:none;font-weight:500;font-size:13px;">Zapamiętaj moje dane na tym telefonie</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">2</span> Nabywca</h2>
+        <div class="check" style="margin-top:0;">
+          <input type="checkbox" id="b-unknown" onchange="toggleBuyer()">
+          <label style="margin:0;text-transform:none;font-weight:500;font-size:13px;">Nie podaję danych nabywcy</label>
+        </div>
+        <div id="buyer-fields">
+          <label>Imię i nazwisko / nazwa</label>
+          <input type="text" id="b-name" placeholder="np. Jan Nowak (rodzic ucznia)">
+          <label>Adres (opcjonalnie)</label>
+          <textarea id="b-address" placeholder="opcjonalnie"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">3</span> Usługa</h2>
+        <div id="items"></div>
+        <button type="button" class="add-item" onclick="addItem()">+ Dodaj pozycję</button>
+      </div>
+
+      <div class="card">
+        <h2><span class="n">4</span> Płatność i data</h2>
+        <div class="row">
+          <div>
+            <label>Data wystawienia</label>
+            <input type="date" id="r-date">
+          </div>
+          <div>
+            <label>Forma płatności</label>
+            <select id="r-payment">
+              <option value="gotówka">Gotówka</option>
+              <option value="przelew">Przelew</option>
+              <option value="BLIK">BLIK</option>
+            </select>
+          </div>
+        </div>
+        <label>Miejsce wystawienia</label>
+        <input type="text" id="r-place" placeholder="np. Wrocław">
+        <label>Uwagi (opcjonalnie)</label>
+        <textarea id="r-notes" placeholder="np. zajęcia w lipcu 2026"></textarea>
+      </div>
+
+      <div class="card" style="background:#fff;">
+        <h2><span class="n">i</span> Klauzula na rachunku</h2>
+        <textarea id="r-clause" style="min-height:80px;font-size:12.5px;"></textarea>
+        <p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">
+          To domyślny tekst dla działalności nierejestrowanej — możesz go dowolnie zmienić. Aktualny limit przychodu i przepisy warto zweryfikować na biznes.gov.pl, nie jestem doradcą podatkowym.
+        </p>
+      </div>
+
+    </main>
+
+    <div class="preview-wrap">
+      <div class="receipt" id="receipt">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="secondary" onclick="saveDraftOnly()">Zapisz szkic</button>
+      <button class="primary" onclick="finalizeAndPrint()">Zapisz i drukuj</button>
+    </div>
+  </div>
+
+  <div id="hist-view" class="view">
+    <main id="history-view">
+      <div id="hist-list"></div>
+    </main>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- storage helpers (localStorage — działa offline, na tym telefonie) ---------------- */
+const LS_SELLER = 'korep_sprzedawca';
+const LS_COUNTER = 'korep_licznik';
+const LS_LIST = 'korep_lista';
+
+function lsGet(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function lsSet(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ console.error('Zapis nieudany', e); }
+}
+
+/* ---------------- state ---------------- */
+let items = [];
+let itemSeq = 0;
+
+const DEFAULT_CLAUSE = "Sprzedaż nie stanowi działalności gospodarczej w rozumieniu ustawy z dnia 6 marca 2018 r. – Prawo przedsiębiorców (działalność nierejestrowana, art. 5). Sprzedaż nie podlega opodatkowaniu podatkiem VAT (podmiotowe zwolnienie / brak statusu podatnika VAT czynnego).";
+
+function todayISO(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function fmtDatePL(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+function money(n){
+  n = Number(n)||0;
+  return n.toLocaleString('pl-PL',{minimumFractionDigits:2, maximumFractionDigits:2}) + ' zł';
+}
+
+function addItem(prefill){
+  itemSeq++;
+  const id = 'it'+itemSeq;
+  items.push({id, desc: prefill?.desc || '', hours: prefill?.hours ?? 1, rate: prefill?.rate ?? ''});
+  renderItems();
+  renderPreview();
+}
+function removeItem(id){
+  items = items.filter(i=>i.id!==id);
+  renderItems();
+  renderPreview();
+}
+function updateItem(id, field, value){
+  const it = items.find(i=>i.id===id);
+  if(it){ it[field] = value; renderPreview(); renderItemValue(id); }
+}
+function renderItemValue(id){
+  const it = items.find(i=>i.id===id);
+  const el = document.getElementById('val-'+id);
+  if(el && it){
+    const val = (Number(it.hours)||0) * (Number(it.rate)||0);
+    el.textContent = 'Wartość: ' + money(val);
+  }
+}
+function renderItems(){
+  const wrap = document.getElementById('items');
+  wrap.innerHTML = '';
+  items.forEach(it=>{
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <button type="button" class="remove" onclick="removeItem('${it.id}')">Usuń</button>
+      <label style="margin-top:0;">Opis (np. przedmiot)</label>
+      <input type="text" value="${escapeHtml(it.desc)}" placeholder="np. Korepetycje z matematyki" oninput="updateItem('${it.id}','desc',this.value)">
+      <div class="row">
+        <div>
+          <label>Liczba godzin</label>
+          <input type="number" min="0" step="0.5" value="${it.hours}" oninput="updateItem('${it.id}','hours',this.value)">
+        </div>
+        <div>
+          <label>Stawka za godzinę (zł)</label>
+          <input type="number" min="0" step="0.01" value="${it.rate}" placeholder="np. 80" oninput="updateItem('${it.id}','rate',this.value)">
+        </div>
+      </div>
+      <div class="item-value" id="val-${it.id}"></div>
+    `;
+    wrap.appendChild(div);
+    renderItemValue(it.id);
+  });
+  if(items.length===0){
+    wrap.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Brak pozycji — dodaj pierwszą.</p>';
+  }
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function toggleBuyer(){
+  const unknown = document.getElementById('b-unknown').checked;
+  document.getElementById('buyer-fields').style.display = unknown ? 'none' : 'block';
+  renderPreview();
+}
+
+function nextNumberPreview(){
+  const c = lsGet(LS_COUNTER, {});
+  const year = new Date().getFullYear();
+  const n = (c[year]||0) + 1;
+  return {n, year};
+}
+
+function currentData(preview){
+  const sName = document.getElementById('s-name').value;
+  const sAddr = document.getElementById('s-address').value;
+  const sPesel = document.getElementById('s-pesel').value;
+  const sContact = document.getElementById('s-contact').value;
+  const bUnknown = document.getElementById('b-unknown').checked;
+  const bName = document.getElementById('b-name').value;
+  const bAddr = document.getElementById('b-address').value;
+  const date = document.getElementById('r-date').value || todayISO();
+  const place = document.getElementById('r-place').value;
+  const payment = document.getElementById('r-payment').value;
+  const notes = document.getElementById('r-notes').value;
+  const clause = document.getElementById('r-clause').value;
+  const total = items.reduce((s,i)=> s + (Number(i.hours)||0)*(Number(i.rate)||0), 0);
+  return {sName,sAddr,sPesel,sContact,bUnknown,bName,bAddr,date,place,payment,notes,clause,items:JSON.parse(JSON.stringify(items)),total};
+}
+
+function renderPreview(numberLabel){
+  const d = currentData();
+  const label = numberLabel || (()=>{ const {n,year} = nextNumberPreview(); return `${n}/${String(year)} (podgląd)`; })();
+
+  const itemsHtml = d.items.length ? d.items.map(i=>{
+    const val = (Number(i.hours)||0)*(Number(i.rate)||0);
+    const hrs = Number(i.hours)||0;
+    return `<div class="r-item">
+      <div class="desc">${escapeHtml(i.desc||'—')}</div>
+      <div class="qtyline"><span>${hrs} godz. x ${money(i.rate)}</span><span>${money(val)}</span></div>
+    </div>`;
+  }).join('') : `<div style="font-style:italic;color:#666;">Brak pozycji</div>`;
+
+  const buyerBlock = d.bUnknown
+    ? `<p style="font-style:italic;color:#555;">bez danych nabywcy</p>`
+    : `<p>${escapeHtml(d.bName)||'—'}${d.bAddr ? '\n'+escapeHtml(d.bAddr) : ''}</p>`;
+
+  document.getElementById('receipt').innerHTML = `
+    <div class="r-shop">
+      <div class="name">${escapeHtml(d.sName)||'Sprzedawca'}</div>
+      ${d.sAddr ? `<div class="line">${escapeHtml(d.sAddr)}</div>` : ''}
+      ${d.sPesel ? `<div class="nip">PESEL: ${escapeHtml(d.sPesel)}</div>` : ''}
+      ${d.sContact ? `<div class="nip">${escapeHtml(d.sContact)}</div>` : ''}
+    </div>
+    <div class="r-tag">## RACHUNEK NR ${label} ##</div>
+    <div class="r-tag" style="font-weight:400;font-size:11px;margin-top:-6px;">(dokument niefiskalny)</div>
+    <div class="r-dash"></div>
+    <div class="r-meta-row"><span>${d.place ? escapeHtml(d.place) : 'Data'}</span><span>${fmtDatePL(d.date)}</span></div>
+    <div class="r-col">
+      <h3>Nabywca</h3>
+      ${buyerBlock}
+    </div>
+    <div class="r-dash"></div>
+    <div class="r-items">${itemsHtml}</div>
+    <div class="r-dash solid"></div>
+    <div class="r-sum-row total"><span class="label">SUMA:</span><span class="amount">${money(d.total)}</span></div>
+    <div class="r-dash"></div>
+    <div class="r-sum-row"><span class="label">DO ZAPŁATY:</span><span class="amount">${money(d.total)}</span></div>
+    <div class="r-pay-title">ROZLICZENIE PŁATNOŚCI</div>
+    <div class="r-pay-row"><span>${escapeHtml(d.payment)}:</span><span>${money(d.total)}</span></div>
+    <div class="r-dash"></div>
+    <div class="r-clause">${escapeHtml(d.clause)}${d.notes ? '\n\nUwagi: '+escapeHtml(d.notes) : ''}</div>
+    <div class="r-issuer">Wystawił(a): ${escapeHtml(d.sName)||'—'}</div>
+    <div class="r-foot">
+      <div>## RACHUNEK NR <span class="num">${label}</span> ##</div>
+    </div>
+  `;
+}
+
+/* ---------------- persistence actions ---------------- */
+function loadSeller(){
+  const s = lsGet(LS_SELLER, null);
+  if(s){
+    document.getElementById('s-name').value = s.name||'';
+    document.getElementById('s-address').value = s.address||'';
+    document.getElementById('s-pesel').value = s.pesel||'';
+    document.getElementById('s-contact').value = s.contact||'';
+  }
+}
+function saveSellerIfChecked(){
+  if(document.getElementById('s-remember').checked){
+    lsSet(LS_SELLER, {
+      name: document.getElementById('s-name').value,
+      address: document.getElementById('s-address').value,
+      pesel: document.getElementById('s-pesel').value,
+      contact: document.getElementById('s-contact').value,
+    });
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function saveDraftOnly(){
+  saveSellerIfChecked();
+  showToast('Dane sprzedawcy zapisane');
+}
+
+function finalizeAndPrint(){
+  saveSellerIfChecked();
+  const d = currentData();
+  if(!d.items.length || d.total<=0){
+    showToast('Dodaj co najmniej jedną pozycję z kwotą');
+    return;
+  }
+  const counter = lsGet(LS_COUNTER, {});
+  const year = new Date().getFullYear();
+  const n = (counter[year]||0) + 1;
+  counter[year] = n;
+  lsSet(LS_COUNTER, counter);
+
+  const label = `${n}/${year}`;
+  const record = {...d, number: label, id: 'rach_'+Date.now(), createdAt: new Date().toISOString()};
+  const list = lsGet(LS_LIST, []);
+  list.unshift(record);
+  lsSet(LS_LIST, list);
+
+  renderPreview(label);
+  showToast('Zapisano jako Nr ' + label);
+  setTimeout(()=> window.print(), 300);
+}
+
+/* ---------------- history view ---------------- */
+function renderHistory(){
+  const list = lsGet(LS_LIST, []);
+  const wrap = document.getElementById('hist-list');
+  if(!list.length){
+    wrap.innerHTML = '<div class="empty">Brak zapisanych rachunków. Wystaw pierwszy w zakładce „Nowy rachunek”.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(r=>`
+    <div class="hist-item">
+      <div>
+        <div class="num">Nr ${escapeHtml(r.number)}</div>
+        <div class="meta">${fmtDatePL(r.date)} · ${r.bUnknown ? 'bez danych nabywcy' : escapeHtml(r.bName||'—')}</div>
+      </div>
+      <div class="amt">${money(r.total)}</div>
+      <div class="hist-actions">
+        <button onclick="reopenReceipt('${r.id}')">Podgląd</button>
+        <button class="del" onclick="deleteReceipt('${r.id}')">Usuń</button>
+      </div>
+    </div>
+  `).join('');
+}
+function reopenReceipt(id){
+  const list = lsGet(LS_LIST, []);
+  const r = list.find(x=>x.id===id);
+  if(!r) return;
+  // fill form with archived data and show preview, then let user print again
+  document.getElementById('s-name').value = r.sName||'';
+  document.getElementById('s-address').value = r.sAddr||'';
+  document.getElementById('s-pesel').value = r.sPesel||'';
+  document.getElementById('s-contact').value = r.sContact||'';
+  document.getElementById('b-unknown').checked = !!r.bUnknown;
+  toggleBuyer();
+  document.getElementById('b-name').value = r.bName||'';
+  document.getElementById('b-address').value = r.bAddr||'';
+  document.getElementById('r-date').value = r.date||todayISO();
+  document.getElementById('r-place').value = r.place||'';
+  document.getElementById('r-payment').value = r.payment||'gotówka';
+  document.getElementById('r-notes').value = r.notes||'';
+  document.getElementById('r-clause').value = r.clause||DEFAULT_CLAUSE;
+  items = JSON.parse(JSON.stringify(r.items||[]));
+  renderItems();
+  switchTab('new');
+  renderPreview(r.number + ' (archiwum)');
+  showToast('Wczytano rachunek Nr ' + r.number + ' — możesz go wydrukować ponownie');
+}
+function deleteReceipt(id){
+  let list = lsGet(LS_LIST, []);
+  list = list.filter(x=>x.id!==id);
+  lsSet(LS_LIST, list);
+  renderHistory();
+}
+
+/* ---------------- tabs ---------------- */
+function switchTab(name){
+  document.getElementById('tab-new').classList.toggle('active', name==='new');
+  document.getElementById('tab-hist').classList.toggle('active', name==='hist');
+  document.getElementById('new-view').classList.toggle('active', name==='new');
+  document.getElementById('hist-view').classList.toggle('active', name==='hist');
+  if(name==='hist') renderHistory();
+}
+
+/* ---------------- init ---------------- */
+function init(){
+  document.getElementById('r-date').value = todayISO();
+  document.getElementById('r-clause').value = DEFAULT_CLAUSE;
+  loadSeller();
+  addItem({desc:'Korepetycje z matematyki', hours:1, rate:''});
+
+  ['s-name','s-address','s-pesel','s-contact','b-name','b-address','r-place','r-payment','r-notes','r-clause']
+    .forEach(id => document.getElementById(id).addEventListener('input', ()=>renderPreview()));
+  document.getElementById('r-date').addEventListener('input', ()=>renderPreview());
+
+  renderPreview();
+}
+init();
+</script>
+</body>
+</html>
